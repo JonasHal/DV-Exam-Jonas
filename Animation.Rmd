@@ -54,6 +54,7 @@ dsize <- dsize %>%
 ```
 
 ```{r Cph-kbh-CleanUp, include=TRUE}
+# change the name to fit the same municipalitynames from leafletDK
 dsize$kommune <- str_replace(dsize$kommune, "Copenhagen", "København")
 df <- merge(dc, dt)
 ```
@@ -70,8 +71,7 @@ while (start < end)
 {
   map <- seperated[[format(start)]]
   pal <- colorBin("YlOrRd", domain = map$casesDiagnosed, bins = bins)
-  frame <- municipalityDK("casesDiagnosed", "kommune", data = map, legend=T) %>%
-    addPolygons(fillColor = pal(map$casesDiagnosed))
+  frame <- municipalityDK("casesDiagnosed", "kommune", data = map, legend=T)
     
   mapshot(frame, file = paste0(getwd(), "/animation/", format(start), ".png"))
   start <- start + 1                    
