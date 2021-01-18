@@ -1,0 +1,79 @@
+# Methods
+
+```{r setup, include=TRUE}
+library(here)
+library(tidyverse)
+library(roll)
+library(magrittr)
+library(shiny)
+library(leafletDK)
+library(mapview)
+```
+
+```{r import, include=TRUE}
+
+# import data frames COVID: cases, tests and population size of municipalities
+dc <- read_delim(here("Data-Epidemiologiske-Rapport-05102020-kl14", "Municipality_cases_time_series.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
+dt <- read_delim(here("Data-Epidemiologiske-Rapport-05102020-kl14", "Municipality_tested_persons_time_series.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
+dsize <- read_delim(here("Data-Epidemiologiske-Rapport-05102020-kl14", "Municipality_test_pos.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
+
+```
+
+```{r dc-diagnosedCases, include=TRUE}
+# make data tidy
+dc %<>%
+  # use pivot_longer to transpose all columns (apart from date_sample) to two columns ('kommune',
+  #  'testsConducted' 
+  #'casesDiagnosed') 
+  #that hold the name of the kommune and the values of the number of diagnosed cases
+  pivot_longer(cols = !date_sample, names_to = "kommune", values_to = "casesDiagnosed") %>%
+  arrange(kommune, date_sample)
+
+dc$kommune <- str_replace(dc$kommune, "Copenhagen", "København")
+dc
+```
+
+```{r testedPeople, include=TRUE}
+dt %<>%
+  # use pivot_longer to transpose all columns (apart from PrDate_adjusted) to two columns ('kommune','testsConducted') that hold the name of the kommune and the values of the number of conducted tests
+  pivot_longer(cols = !PrDate_adjusted, names_to = "kommune", values_to = "testsConducted") %>%
+  arrange(kommune, PrDate_adjusted) %>%
+  rename(date_sample = PrDate_adjusted) %>%
+  filter(!(kommune == "X101"))
+
+dt$kommune <- str_replace(dt$kommune, "Copenhagen", "København")
+```
+
+```{r columnRenaming, include=TRUE}
+# make data compatible rename columns for merging
+dsize <- dsize %>%
+  select(contains("Kom"), Befolkningstal) %>%
+  rename("kID" = `Kommune_(id)`, "kommune" = `Kommune_(navn)`, population = Befolkningstal) %>%
+  mutate(population = population * 1000) %>%
+  select(-kID)
+```
+
+```{r Cph-kbh-CleanUp, include=TRUE}
+dsize$kommune <- str_replace(dsize$kommune, "Copenhagen", "København")
+df <- merge(dc, dt)
+```
+
+```{r Iteration, include=TRUE}
+start <- as.Date("2020-09-25")
+end   <- as.Date("2020-10-01")
+bins <- c(1, 2, 4, 8, 16, 32, 64, 128, 256)
+pal <- colorBin("YlOrRd", domain = dc$casesDiagnosed, bins = bins)
+
+seperated <- split(df, df$date_sample)
+
+while (start < end)
+{
+  map <- seperated[[format(start)]]
+  pal <- colorBin("YlOrRd", domain = map$casesDiagnosed, bins = bins)
+  frame <- municipalityDK("casesDiagnosed", "kommune", data = map, legend=T) %>%
+    addPolygons(fillColor = pal(map$casesDiagnosed))
+    
+  mapshot(frame, file = paste0(getwd(), "/animation/", format(start), ".png"))
+  start <- start + 1                    
+}
+```

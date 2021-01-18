@@ -1,0 +1,165 @@
+# Literature
+
+```{r, include=FALSE}
+if(!require("devtools")) install.packages("devtools")
+devtools::install_github("sebastianbarfort/mapDK", force=TRUE)
+devtools::install_github("mikkelkrogsholm/leafletDK", force=TRUE)
+```
+
+```{r setup, include=TRUE}
+library(here)
+library(tidyverse)
+library(roll)
+library(magrittr)
+library(shiny)
+library(leafletDK)
+library(mapDK)
+```
+
+```{r import, include=TRUE}
+
+# import data frames COVID: cases, tests and population size of municipalities
+dc <- read_delim(here("Data-Epidemiologiske-Rapport-05102020-kl14", "Municipality_cases_time_series.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
+dt <- read_delim(here("Data-Epidemiologiske-Rapport-05102020-kl14", "Municipality_tested_persons_time_series.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
+dsize <- read_delim(here("Data-Epidemiologiske-Rapport-05102020-kl14", "Municipality_test_pos.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
+
+```
+
+## Covid data analysis DK overview
+```{r dataFramesGlimpse , include=TRUE}
+dc
+dt
+dsize
+```
+
+```{r dc-diagnosedCases, include=TRUE}
+# make data tidy
+dc %<>%
+  # use pivot_longer to transpose all columns (apart from date_sample) to two columns ('kommune',
+  #  'testsConducted' 
+  #'casesDiagnosed') 
+  #that hold the name of the kommune and the values of the number of diagnosed cases
+  pivot_longer(cols = !date_sample, names_to = "kommune", values_to = "casesDiagnosed") %>%
+  arrange(kommune, date_sample)
+
+dc$kommune <- str_replace(dc$kommune, "Copenhagen", "København")
+dc
+```
+
+```{r testedPeople, include=TRUE}
+dt %<>%
+  # use pivot_longer to transpose all columns (apart from PrDate_adjusted) to two columns ('kommune','testsConducted') that hold the name of the kommune and the values of the number of conducted tests
+  pivot_longer(cols = !PrDate_adjusted, names_to = "kommune", values_to = "testsConducted") %>%
+  arrange(kommune, PrDate_adjusted) %>%
+  rename(date_sample = PrDate_adjusted) %>%
+  filter(!(kommune == "X101"))
+
+dt$kommune <- str_replace(dt$kommune, "Copenhagen", "København")
+```
+
+```{r columnRenaming, include=TRUE}
+# make data compatible rename columns for merging
+dsize <- dsize %>%
+  select(contains("Kom"), Befolkningstal) %>%
+  rename("kID" = `Kommune_(id)`, "kommune" = `Kommune_(navn)`, population = Befolkningstal) %>%
+  mutate(population = population * 1000) %>%
+  select(-kID)
+```
+
+```{r keyCheck, include=TRUE}
+# check Kommune name can be used as key
+dc[!(dc$kommune %in% dsize$kommune), ]$kommune
+dsize[!(dsize$kommune %in% dt$kommune), ]$kommune
+dt[!(dt$kommune %in% dsize$kommune), ]$kommune
+```
+
+```{r Cph-kbh-CleanUp, include=TRUE}
+dsize$kommune <- str_replace(dsize$kommune, "Copenhagen", "København")
+df <- merge(dc, dt, dsize)
+```
+
+```{r DeriveVariablesCases, include=TRUE}
+# create new variables within mutate
+# (e.g. rolling aggregates with roll_sum - cases of the last seven days) -
+# numbers per 1000 people
+# use the lag function to compute the differences between a days (7day sum) value and the one from 7 days (3, and 1) ago
+#
+dc %<>%
+  group_by(kommune) %>%
+  arrange(kommune, date_sample) %>%
+  mutate(
+    dcr100k = casesDiagnosed / (population / 100000),
+    dcr7d = roll_sum(casesDiagnosed, width = 7, min_obs = 1) / (population / 100000),
+    dcr7dPer100k = dcr7d / (population / 100000),
+    dcr7dPer100kCh1 = lag(dcr7dPer100k, 1) - dcr7dPer100k,
+    dcr7dPer100kCh3 = lag(dcr7dPer100k, 3) - dcr7dPer100k,
+    dcr7dPer100kCh7 = lag(dcr7dPer100k, 7) - dcr7dPer100k,
+    dcdTDGrowth=  ifelse(lag(dcr100k,1)!=0,(dcr100k-lag(dcr100k,1)),0)
+  ) %>% relocate(dcdTDGrowth)
+
+dc
+```
+
+```{r DeriveVariablesTests}
+# create new variables within mutate
+# (e.g. rolling aggregates with roll_sum - cases of the last seven days) -
+# numbers per 1000 people
+# use the lag function to compute the differences between a days (7day sum) value and the one from 7 days (3, and 1) ago
+dt %<>%
+  group_by(kommune) %>%
+  arrange(kommune, date_sample) %>%
+  mutate(
+    tr100k = testsConducted / (population / 100000),
+    tr7d = roll_sum(testsConducted, width = 7, min_obs = 1),
+    tr7dP100k = tr7d / (population / 100000),
+    tr7dP100kCh1 = lag(tr7dP100k, 1) - tr7dP100k,
+    tr7dP100kCh3 = lag(tr7dP100k, 3) - tr7dP100k,
+    tr7dP100kCh7 = lag(tr7dP100k, 7) - tr7dP100k
+  )
+
+dt
+```
+
+
+```{r Merge}
+# merge test with case data (on shared keys - date_sample+kommune)
+df <- as_tibble(merge(dc, dt))
+df
+
+# create test positive variables
+df %<>%
+  mutate(
+    PosTestRateOnDay = dcr100k / tr100k,
+    PosTestRate7d = dcr7dPer100k / tr7dP100k,
+  )
+# check there were no diagnosis without tests
+sum(df$casesDiagnosed > df$testsConducted)
+```
+
+## Covid data analysis DK overview - 
+
+```{r}
+df
+
+df %>%
+  filter(kommune == "Aalborg") %>%
+  ggplot(aes(x =date_sample,y= tr7dP100k/1000)) +
+  geom_line()+geom_line(aes(x=date_sample,y=dcr7dPer100k),color="red")+theme_bw()
+
+df %>%
+  filter(kommune == "Aalborg") %>%
+  ggplot(aes(x =tr7dP100k/1000,y= dcr7dPer100k)) +geom_line()+theme_bw()
+  geom_line(aes(x=date_sample,y=dcr7dPer100k),color="red")
+  
+df %>%
+  filter(kommune == "Aalborg") %>%
+  ggplot(aes(x =tr7dP100k/1000,y= PosTestRate7d)) +geom_line()+theme_bw()
+  geom_line(aes(x=date_sample,y=dcr7dPer100k),color="red")+theme_bw()
+  geom_line(aes(x=date_sample,y=dcr7dPer100k),color="red")+theme_bw()
+```
+
+```{r coronapositiveanimate, include=TRUE}
+p <- municipalityDK("population", "kommune", data = dsize, legend=T)
+
+
+```
