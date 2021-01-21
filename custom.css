@@ -1,0 +1,7 @@
+footer {
+    background: no-repeat url("hmi-lab.svg");
+    height: 60px;
+    margin-top: 15px;
+    width: 100%;
+    display: inline-block;
+}

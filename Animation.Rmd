@@ -29,7 +29,7 @@ dc %<>%
   pivot_longer(cols = !date_sample, names_to = "kommune", values_to = "casesDiagnosed") %>%
   arrange(kommune, date_sample)
 
-dc$kommune <- str_replace(dc$kommune, "Copenhagen", "København")
+dc$kommune <- str_replace(dc$kommune, "København", "Copenhagen")
 dc
 ```
 
