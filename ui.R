@@ -7,31 +7,40 @@
 #    http://shiny.rstudio.com/
 #
 
-# Define UI for application that draws a histogram
 shinyUI(
-  fluidPage( includeCSS("custom.css"),
-  headerPanel("DK Covid cases overview"),
-  sidebarPanel(
-    dateInput("date", label = "Date",
-                min = min(dc$date_sample),
-                max = max(dc$date_sample),
-                value = max(dc$date_sample),
+  dashboardPage(
+    dashboardHeader(title = "Covid Overview"),
+    dashboardSidebar(
+      sidebarMenu(
+        menuItem("Incidence Map", tabName = "incidence"),
+        menuItem("Another Vis"),
+        menuItem("Admitted and New Cases")
+      )
     ),
-    tags$hr()
-    # checkboxInput('header', 'Header', TRUE),
-    # radioButtons('sep', 'Separator',
-    #              c(Comma=',',
-    #                Semicolon=';',
-    #                Tab='\t'),
-    #              selected = ';'),
-    # radioButtons('quote', 'Quote',
-    #              c(None='',
-    #                'Double Quote'='"',
-    #                'Single Quote'="'"),
-    #              'Double Quote')
-  ),
-  mainPanel(
-    leafletOutput("map", height = "900"),
-   tags$footer()
+    dashboardBody(
+      tabItems(
+        tabItem(
+          tabName = "incidence",
+          fluidRow(
+            box(
+              width = 3,
+              dateInput("date", label = "Select a Date:",
+                      min = min(dc$date_sample),
+                      max = max(dc$date_sample) - 2,
+                      value = max(dc$date_sample) - 2,
+              ),
+              tableOutput("top")
+            ),
+            box(
+              width = 9,
+              leafletOutput("map", height = "650")
+            )
+          )
+        )
+
+
+
+      )
+    )
   )
-))
+)

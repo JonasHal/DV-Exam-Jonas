@@ -39,30 +39,42 @@ server <- function(input, output) {
     df_dk_covid <-
         st_as_sf(df_dk_covid, sf_column_name = "geometry")
 
-    bins <- c(0,1,4,10,25,100,250)
+    bins <- c(0,2,4,8,16,32,64,128,256)
     # seq(min(df_dk_covid$dcr7dPer100k)*100, max(df_dk_covid$dcr7dPer100k)*100, max(df_dk_covid$dcr7dPer100k)*100 / 5)
     #
     pal <- colorBin(
-        palette = c("#ffe0c4", "#ffd3ab","#febe8d","#fea469", "#f4874c", "#e16d3d", "#a3573a"),
+        palette = c("#ffe0c4", "#ffd3ab","#febe8d","#fea469", "#f4874c", "#e16d3d", "#a3573a", "#8D2D2B"),
         bins = bins
+    )
+
+    old = c("kommune", "casesDiagnosed", "casesDPer100k")
+    new = c("Kommune", "New Cases", "Pr. 100.000")
+
+    output$top <- renderTable({
+        filter <- dk_data[dk_data$date_sample == input$date[1], ]
+        table_top <- filter[ ,c("kommune", "casesDiagnosed", "casesDPer100k")]
+        table_top %>%
+            arrange(desc(casesDPer100k)) %>%
+            rename_at(vars(all_of(old)), ~ new) %>%
+            head()
+        },
+        spacing = "xs"
     )
 
     output$map <- renderLeaflet({
         leaflet(options = leafletOptions(zoomSnap = 0.25, zoomDelta=0.25)) %>%
-            setView(lng = 11.001785, lat = 56.26392, zoom = 7.5) %>%
+            setView(lng = 11.001785, lat = 56.26392, zoom = 7) %>%
             addPolygons(
                 data = filtered(), color = "#444444", weight = 1, smoothFactor = 0.5,
                 opacity = 1.0, fillOpacity = 1,
-                fillColor = ~ pal(filtered()$casesDiagnosed),
+                fillColor = ~ pal(filtered()$casesDPer100k),
+                highlight = highlightOptions(weight = 3, color = "blue"),
                 popup = paste0(
-                    "<h5>Date: ", format(filtered()$date_sample, "%d-%b-%y"), "</h5>",
-                    "<b>Kommune:</b> ",
-                    filtered()$kommune,
-                    "<br>",
-                    "<b>Tilfælde:</b> ",
+                    "<h5>", filtered()$kommune, "</h5>",
+                    "<b>New Cases:</b> ",
                     filtered()$casesDiagnosed,
                     "<br>",
-                    "<b>Incidens:</b> ",
+                    "<b>Incidence pr. 100000:</b> ",
                     round(filtered()$casesDPer100k, digits=0)
                 )
             ) %>%
@@ -70,8 +82,8 @@ server <- function(input, output) {
                 data = filtered(),
                 position = "topright",
                 pal = pal,
-                values = ~ pal(filtered()$casesDiagnosed),
-                title = "New Cases"
+                values = ~ pal(filtered()$casesDPer100k),
+                title = "Incidence pr 100.000"
             )
 
     })

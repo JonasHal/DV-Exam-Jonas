@@ -1,0 +1,13 @@
+name: DV-Exam-Jonas
+title: DV-Exam-Jonas
+username:
+account: jonashal
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3511763
+bundleId: 4134154
+url: https://jonashal.shinyapps.io/dv-exam-jonas/
+when: 1611432244.67911
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: Tidlige versioner
