@@ -56,7 +56,7 @@ server <- function(input, output) {
         table_top %>%
             arrange(desc(casesDPer100k)) %>%
             rename_at(vars(all_of(old)), ~ new) %>%
-            head()
+            head(n = 10L)
         },
         spacing = "xs"
     )

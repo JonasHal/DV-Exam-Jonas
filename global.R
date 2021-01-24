@@ -56,6 +56,8 @@ ProcessData <- function(dc) {
       casesDPer100k = casesDiagnosed / (population / 100000)
     )
 
+  dc$casesDiagnosed <- as.integer(dc$casesDiagnosed)
+
   return(dc)
 }
 

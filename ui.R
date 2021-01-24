@@ -13,7 +13,7 @@ shinyUI(
     dashboardSidebar(
       sidebarMenu(
         menuItem("Incidence Map", tabName = "incidence"),
-        menuItem("Another Vis"),
+        menuItem("Restrictions and R-number", tabname = "restrictions"),
         menuItem("Admitted and New Cases")
       )
     ),
@@ -29,11 +29,20 @@ shinyUI(
                       max = max(dc$date_sample) - 2,
                       value = max(dc$date_sample) - 2,
               ),
+              h2("Top 10 Incidence", align="center"),
               tableOutput("top")
             ),
             box(
               width = 9,
               leafletOutput("map", height = "650")
+            )
+          )
+        ),
+        tabItem(
+          tabName = "restrictions",
+          fluidRow(
+            box(
+              h1("R and restrictions")
             )
           )
         )
