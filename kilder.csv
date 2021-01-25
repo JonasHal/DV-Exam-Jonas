@@ -1,5 +1,6 @@
 date,event_description,source_link
-2020-11-03,Forsamlingsforbud på 10 og Danmark lukker ned,https://www.stm.dk/presse/pressemoedearkiv/pressemoede-om-covid-19-den-11-marts/
+2020-03-11,Forsamlingsforbud på 10 og Danmark lukker ned,https://www.stm.dk/presse/pressemoedearkiv/pressemoede-om-covid-19-den-11-marts/
+2020-03-11,Danmark lukker ned,https://www.stm.dk/presse/pressemoedearkiv/pressemoede-om-covid-19-den-11-marts/
 2020-04-15,1. Face: Vuggestuer og skoler for 0-4 klasse åbner,https://www.stm.dk/statsministeren/taler/statsminister-mette-frederiksens-indledning-paa-pressemoede-i-statsministeriet-om-corona-virus-den-6-april/
 2020-04-20,Serviceerhverv med menneskelig kontakt for lov at åbne,https://em.dk/nyhedsarkiv/2020/april/covid-19-nye-retningslinjer-skal-hjaelpe-frisoerer-og-andre-erhverv-i-gang-igen/
 2020-05-10,En meters afstand i offentligt rum,https://www.sst.dk/da/Nyheder/2020/Vi-skal-alle-fortsat-holde-afstand-og-vise-hensyn-saa-kan-vi-rykke-en-smule-taettere-sammen
@@ -11,14 +12,18 @@ date,event_description,source_link
 2020-07-07,Mundbindkrav i Århus,https://aarhus.lokalavisen.dk/nyheder/2020-08-07/-Krav-om-mundbind-i-al-offentlig-transport-i-Aarhus-7508959.html
 2020-08-14,4. face: Forsamlingsforbud øges til 200,https://nyheder.tv2.dk/politik/2020-08-14-ny-fase-4-af-genaabningen-paa-plads-det-er-aftalt-og-det-er-ikke-med
 2020-08-15,Mundbindkrav i alt offentligt transport,https://www.sst.dk/da/Nyheder/2020/Krav-om-mundbind-i-den-kollektive-trafik-og-saerlige-anbefalinger-til-personer-i-oeget-risiko
-2020-09-04,Alle skoler er åbne igen og 50% stigning af nye smittede,https://www.ssi.dk/aktuelt/nyheder/2020/09_stor-stigning-i-antal-smittede-med-covid19_040909
-2020-09-18,Forsamlingsforbud på 50 og restauranter lukker kl. 22,https://nyheder.tv2.dk/2020-09-18-pressemoede-om-coronavirus
+2020-09-04,Alle skoler er åbne igen,https://www.ssi.dk/aktuelt/nyheder/2020/09_stor-stigning-i-antal-smittede-med-covid19_040909
+2020-09-04,50% stigning af nye smittede,https://www.ssi.dk/aktuelt/nyheder/2020/09_stor-stigning-i-antal-smittede-med-covid19_040909
+2020-09-18,Forsamlingsforbud på 50,https://nyheder.tv2.dk/2020-09-18-pressemoede-om-coronavirus
+2020-09-18,Barer og restauranter lukker kl. 22,https://nyheder.tv2.dk/2020-09-18-pressemoede-om-coronavirus
 2020-10-14,Corona i Mink bliver opdaget,https://www.tv2nord.dk/nordjylland/millioner-af-mink-aflives-det-ved-vi-om-smitten-af-mink
-2020-10-23,Forsamlingsforbud på 10 og Krav om mundbind overalt,https://www.regeringen.dk/nyheder/2020/pressemoede-om-covid-19-i-statsministeriet-fredag-23-oktober-kl-1830/
+2020-10-23,Forsamlingsforbud på 10,https://www.regeringen.dk/nyheder/2020/pressemoede-om-covid-19-i-statsministeriet-fredag-23-oktober-kl-1830/
+2020-10-23,Krav om mundbind overalt,https://www.regeringen.dk/nyheder/2020/pressemoede-om-covid-19-i-statsministeriet-fredag-23-oktober-kl-1830/
 2020-11-04,Alle mink skal aflives pga. fare for mutation,https://nyheder.tv2.dk/politik/2020-11-11-her-er-de-vigtigste-svar-fra-dagens-samraad-med-foedevareministeren
 2020-12-17,Alle storcentre skal lukke,https://www.dr.dk/nyheder/politik/nedlukning-udvides-efter-smittestigning-situationen-er-desvaerre-meget-alvorlig
 2020-12-21,Liberale erhverv skal lukke,https://www.dr.dk/nyheder/politik/nedlukning-udvides-efter-smittestigning-situationen-er-desvaerre-meget-alvorlig
 2020-12-25,Alt detailhandel skal lukke,https://www.dr.dk/nyheder/politik/nedlukning-udvides-efter-smittestigning-situationen-er-desvaerre-meget-alvorlig
-2020-01-05,Forsamlingsforbud på 5 og Daginstitutioner forbliver åbne,https://www.tv2east.dk/coronavirus/daginstitutioner-forbliver-aabne-trods-pres-fra-paedagoger
+2020-01-05,Forsamlingsforbud på 5,https://www.tv2east.dk/coronavirus/daginstitutioner-forbliver-aabne-trods-pres-fra-paedagoger
+2020-01-05,Daginstitutioner forbliver åbne,https://www.tv2east.dk/coronavirus/daginstitutioner-forbliver-aabne-trods-pres-fra-paedagoger
 2020-01-23,33 Danskere testet positive fra Dubai,https://www.dr.dk/nyheder/indland/33-coronasmittede-er-rejst-til-danmark-fra-dubai-trods-negativ-test
 2020-01-23,Men in Black brænder dukke og forsamler sig 1000 personer,https://www.dr.dk/nyheder/indland/demonstranter-skabte-igen-uro-paa-gaden-i-koebenhavn

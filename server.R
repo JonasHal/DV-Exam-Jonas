@@ -187,9 +187,9 @@ server <- function(input, output) {
                 facet_wrap(~region, nrow = 5, ncol = 1, scales = "free_y") +
                 geom_area(aes(x=date_sample, y=newCases), alpha=0.2, color="red") +
                 geom_line(aes(x=date_sample, y=newCases), color="red") +
-                geom_area(aes(x=date_sample, y=newlyAdmitted * 15), alpha=0.2, color="blue") +
-                geom_line(aes(x=date_sample, y=newlyAdmitted * 15), color="blue") +
-                scale_y_continuous(sec.axis = sec_axis(~./15, name = "Admitted")) +
+                geom_area(aes(x=date_sample, y=newlyAdmitted * 20), alpha=0.2, color="blue") +
+                geom_line(aes(x=date_sample, y=newlyAdmitted * 20), color="blue") +
+                scale_y_continuous(sec.axis = sec_axis(~./20, name = "Admitted")) +
                 scale_x_date(date_breaks = "1 month", date_labels = "%b-%y") +
                 labs(x = "", y = "Cases")
         }

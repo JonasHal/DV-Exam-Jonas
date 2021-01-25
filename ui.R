@@ -40,12 +40,12 @@ shinyUI(
               br(), br(),
               h2("Top 10 Incidence", align="center"),
               tableOutput("top") %>%
-                withSpinner(color = "red", type = 8)
+                withSpinner(color = "red", type = 4)
             ),
             box(
               width = 9,
               leafletOutput("map", height = "650") %>%
-                withSpinner(color = "#ffd3ab", color.background = "red", type = 2)
+                withSpinner(color = "red", type = 4)
             )
           )
         ),
