@@ -13,11 +13,19 @@ shinyUI(
     dashboardSidebar(
       sidebarMenu(
         menuItem("Incidence Map", tabName = "incidence"),
-        menuItem("Restrictions and R-number", tabname = "restrictions"),
-        menuItem("Admitted and New Cases")
+        menuItem("Restrictions and R-number", tabName = "restrictions"),
+        menuItem("Admitted and New Cases", tabName = "admitted")
       )
     ),
     dashboardBody(
+      # tags$head(tags$style(HTML('
+      #   .skin-blue .main-header .logo {
+      #     background-color: #e16d3d;
+      #   }
+      #   .skin-blue .main-header .navbar {
+      #                         background-color: #fea469;
+      #   }
+      # '))),
       tabItems(
         tabItem(
           tabName = "incidence",
@@ -27,14 +35,17 @@ shinyUI(
               dateInput("date", label = "Select a Date:",
                       min = min(dc$date_sample),
                       max = max(dc$date_sample) - 2,
-                      value = max(dc$date_sample) - 2,
+                      value = max(dc$date_sample) - 2
               ),
+              br(), br(),
               h2("Top 10 Incidence", align="center"),
-              tableOutput("top")
+              tableOutput("top") %>%
+                withSpinner(color = "red", type = 8)
             ),
             box(
               width = 9,
-              leafletOutput("map", height = "650")
+              leafletOutput("map", height = "650") %>%
+                withSpinner(color = "#ffd3ab", color.background = "red", type = 2)
             )
           )
         ),
@@ -42,13 +53,59 @@ shinyUI(
           tabName = "restrictions",
           fluidRow(
             box(
-              h1("R and restrictions")
+              width = 3,
+              dateRangeInput("dateRange", label = "Select a range:",
+                             start = min(rt$date_sample),
+                             end = max(rt$date_sample),
+                             min = min(rt$date_sample),
+                             max = max(rt$date_sample),
+              )
+            ),
+            box(
+              width = 9,
+              plotOutput("rplot", height = "320") %>%
+                withSpinner(color = "red", type = 4)
+            ),
+            box(
+              width = 12,
+              h1("Timeline of Restrictions"),
+              textOutput("TBA")
+            )
+          )
+        ),
+        tabItem(
+          tabName = "admitted",
+          fluidRow(
+            box(
+              width = 3,
+              dateRangeInput("dateRange2", label = "Select a range:",
+                             start = min(dm$Dato),
+                             end = max(dm$Dato),
+                             min = min(dm$Dato),
+                             max = max(dm$Dato),
+              ),
+              br(),
+              checkboxGroupInput("selectAdmitted", label = "Currently Showing:",
+                                 choices = list("New Cases" = 1,
+                                                "New Admitted" = 2),
+                                 selected = c(1,2)
+              ),
+              br(),
+              selectInput("selectAgg", label = "Select datatype:",
+                          c("Daily" = "D",
+                            "Cumulative 1 week" = "W",
+                            "Cumulative Total" = "T")
+              )
+            ),
+            box(
+              width = 9,
+              plotOutput("admittedPlot", height = "650") %>%
+                withSpinner(color = "red", type = 1)
             )
           )
         )
 
-
-
+        #Insert Here for more Pages
       )
     )
   )
