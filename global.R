@@ -17,10 +17,10 @@ library(lubridate)
 # Load Used Data
 dc <- read_delim(here("Data", "Municipality_cases_time_series.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
 dsize <- read_delim(here("Data", "Municipality_test_pos.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
-dk <- st_read("shapefiles/gadm36_DNK_2.shp")
 rt <- read_delim(here("Data", "Rt_cases.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
 dm <- read_delim(here("Data", "Newly_admitted_over_time.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
 cs <- read_delim(here("Data", "Sources.csv"), ",", escape_double = FALSE, trim_ws = TRUE)
+dk <- st_read("shapefiles/gadm36_DNK_2.shp")
 
 #Replace names to fit the Polygons
 dk$NAME_2 <- str_replace(dk$NAME_2, "Århus", "Aarhus")
@@ -57,7 +57,7 @@ ProcessData <- function(dc) {
   dc %<>%
     group_by(kommune) %>%
     mutate(
-      casesDPer100k = casesDiagnosed / (population / 100000),
+      casesDPer100k = casesDiagnosed / (population / 100000)
     )
 
   dc$casesDiagnosed <- as.integer(dc$casesDiagnosed)

@@ -4,19 +4,42 @@
 library(here)
 library(tidyverse)
 library(roll)
+library(dplyr)
 library(magrittr)
-library(shiny)
-library(leafletDK)
+library(leaflet)
+library(sf)
+library(ggplot2)
+library(data.table)
+library(plotly)
+library(scales)
+library(lubridate)
 library(mapview)
+library(dplyr)
 ```
 
 ```{r import, include=TRUE}
 
-# import data frames COVID: cases, tests and population size of municipalities
-dc <- read_delim(here("Data-Epidemiologiske-Rapport-05102020-kl14", "Municipality_cases_time_series.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
-dt <- read_delim(here("Data-Epidemiologiske-Rapport-05102020-kl14", "Municipality_tested_persons_time_series.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
-dsize <- read_delim(here("Data-Epidemiologiske-Rapport-05102020-kl14", "Municipality_test_pos.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
+# Load Used Data
+dc <- read_delim(here("Data", "Municipality_cases_time_series.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
+dsize <- read_delim(here("Data", "Municipality_test_pos.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
+dk <- st_read("shapefiles/gadm36_DNK_2.shp")
+```
 
+```{r dk-transformations, include=True}
+#Replace names to fit the Polygons
+dk$NAME_2 <- str_replace(dk$NAME_2, "Århus", "Aarhus")
+dk$NAME_2 <- str_replace(dk$NAME_2, "Høje Taastrup", "Høje-Taastrup")
+dk$NAME_2 <- str_replace(dk$NAME_2, "Vesthimmerland", "Vesthimmerlands")
+
+```
+
+```{r columnRenaming, include=TRUE}
+# make data compatible rename columns for merging
+dsize <- dsize %>%
+  select(contains("Kom"), Befolkningstal) %>%
+  rename("kID" = `Kommune_(id)`, "kommune" = `Kommune_(navn)`, population = Befolkningstal) %>%
+  mutate(population = population * 1000) %>%
+  select(-kID)
 ```
 
 ```{r dc-diagnosedCases, include=TRUE}
@@ -30,50 +53,125 @@ dc %<>%
   arrange(kommune, date_sample)
 
 dc$kommune <- str_replace(dc$kommune, "København", "Copenhagen")
-dc
-```
 
-```{r testedPeople, include=TRUE}
-dt %<>%
-  # use pivot_longer to transpose all columns (apart from PrDate_adjusted) to two columns ('kommune','testsConducted') that hold the name of the kommune and the values of the number of conducted tests
-  pivot_longer(cols = !PrDate_adjusted, names_to = "kommune", values_to = "testsConducted") %>%
-  arrange(kommune, PrDate_adjusted) %>%
-  rename(date_sample = PrDate_adjusted) %>%
-  filter(!(kommune == "X101"))
+# merge data together
+  dc <- merge(dc, dsize)
 
-dt$kommune <- str_replace(dt$kommune, "Copenhagen", "København")
-```
+  # create new variables
+  dc %<>%
+    group_by(kommune) %>%
+    mutate(
+      casesDPer100k = casesDiagnosed / (population / 100000),
+      casesWPer100k = roll_sum(casesDPer100k, width = 7, min_obs = 1)
+    )
 
-```{r columnRenaming, include=TRUE}
-# make data compatible rename columns for merging
-dsize <- dsize %>%
-  select(contains("Kom"), Befolkningstal) %>%
-  rename("kID" = `Kommune_(id)`, "kommune" = `Kommune_(navn)`, population = Befolkningstal) %>%
-  mutate(population = population * 1000) %>%
-  select(-kID)
+  dc$casesDiagnosed <- as.integer(dc$casesDiagnosed)
+  
+  dk_data <- dc
 ```
 
 ```{r Cph-kbh-CleanUp, include=TRUE}
 # change the name to fit the same municipalitynames from leafletDK
 dsize$kommune <- str_replace(dsize$kommune, "Copenhagen", "København")
-df <- merge(dc, dt)
 ```
 
-```{r Iteration, include=TRUE}
-start <- as.Date("2020-09-25")
-end   <- as.Date("2020-10-01")
-bins <- c(1, 2, 4, 8, 16, 32, 64, 128, 256)
-pal <- colorBin("YlOrRd", domain = dc$casesDiagnosed, bins = bins)
+```{r dk_resampling, include=True}
+dk_pop <-
+    dsize %>%
+    left_join(dk, by = c("kommune" = "NAME_2"))
 
-seperated <- split(df, df$date_sample)
+  # transforming dk_pop to a shapefile
+  sf_dk <- st_as_sf(dk_pop, sf_column_name = "geometry")
+
+  # getting the centroids to grab the coordinates from the shapefile - results
+  # in a matrix
+  dk_cent <- st_centroid(sf_dk)
+  dk_coords <- st_coordinates(dk_cent)
+
+  # converting the matrix into a df again
+  dk_coords_next <- as.data.frame(dk_coords)
+
+  # adding the coordinates to the kommunes and their population
+  dk_merge_coords <-
+    dsize %>%
+    cbind(dk_coords_next)
+
+  # merging the coordinates into the shapefile
+  sf_dk <-
+    dk_merge_coords %>%
+    merge(sf_dk)
+```
+
+```{r merge_dk_df}
+# merging the coords/kommunes with the covid data
+dk_merge_coords_test <-
+    dk_data %>%
+    merge(sf_dk)
+
+# merging the covid data into the shapefile to plot it
+df_dk_covid <-
+    dk_data %>%
+    group_by(kommune) %>%
+    merge(sf_dk)
+
+# to plot the data it needs to be a shapefile (sf) again - creating shapefile
+df_dk_covid <- st_as_sf(df_dk_covid, sf_column_name = "geometry")
+```
+
+
+```{r Iteration, include=TRUE}
+start <- as.Date("2020-02-26")
+end   <- as.Date("2021-02-20")
+#Creates the coloring schema
+bins <- c(0,5,50,200,500,1000,2500)
+pal <- colorBin(
+    palette = c("#ffe0c4", "#febe8d","#fea469", "#e16d3d", "#a3573a", "#8D2D2B"),
+    bins = bins
+)
 
 while (start < end)
-{
-  map <- seperated[[format(start)]]
-  pal <- colorBin("YlOrRd", domain = map$casesDiagnosed, bins = bins)
-  frame <- municipalityDK("casesDiagnosed", "kommune", data = map, legend=T)
+{ 
+  if (start == "2020-02-29") {
+    start <- start + 1  
+  }
+  else {
+    df <- df_dk_covid[df_dk_covid$date_sample == start, ]
+  
+    frame <- leaflet(df, options = leafletOptions(zoomSnap = 0, zoomDelta=0)) %>%
+            setView(lng = 10.801785, lat = 55.76392, zoom = 7) %>%
+            addLegend(
+                data = df,
+                position = "topright",
+                pal = pal,
+                values = ~ pal(df$casesWPer100k),
+                title = "Uge Incidens - pr. 100.000"
+            ) %>%
+            addPolygons(
+                color = "#444444", weight = 1, smoothFactor = 0.5,
+                opacity = 1.0, fillOpacity = 1,
+                fillColor = ~ pal(df$casesWPer100k),
+            ) %>% 
+            addLabelOnlyMarkers(lng = 13.632050, 
+                        lat = 57.227758, 
+                        label = df$date_sample, 
+                        labelOptions = labelOptions(noHide = T, textOnly= T, textsize = "30px")
+            ) %>% 
+            addLabelOnlyMarkers(lng = 14.932050, 
+                        lat = 56.427758, 
+                        label = sum(df$casesDiagnosed), 
+                        labelOptions = labelOptions(noHide = T, textOnly= T, textsize = "30px")
+            ) %>%
+            addMarkers(lng = 14.082050,
+                       lat = 56.427758,
+                       label = "Nye smittede:",
+                       options = markerOptions(opacity = 0),
+                       labelOptions = labelOptions(noHide = T, textOnly=T, textsize = "30px")
+            )
     
-  mapshot(frame, file = paste0(getwd(), "/animation/", format(start), ".png"))
-  start <- start + 1                    
+  
+    mapshot(frame, file = paste0(getwd(), "/animation/", format(start), ".png"))
+    
+    start <- start + 1  
+  }
 }
 ```
