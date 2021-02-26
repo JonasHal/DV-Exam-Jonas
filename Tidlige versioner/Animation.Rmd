@@ -22,7 +22,7 @@ library(dplyr)
 # Load Used Data
 dc <- read_delim(here("Data", "Municipality_cases_time_series.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
 dsize <- read_delim(here("Data", "Municipality_test_pos.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
-dk <- st_read("shapefiles/gadm36_DNK_2.shp")
+dk <- st_read(here("shapefiles/gadm36_DNK_2.shp"))
 ```
 
 ```{r dk-transformations, include=True}
@@ -120,8 +120,8 @@ df_dk_covid <- st_as_sf(df_dk_covid, sf_column_name = "geometry")
 
 
 ```{r Iteration, include=TRUE}
-start <- as.Date("2020-02-26")
-end   <- as.Date("2021-02-20")
+start <- as.Date("2020-03-04")
+end   <- as.Date("2021-02-25")
 #Creates the coloring schema
 bins <- c(0,5,50,200,500,1000,2500)
 pal <- colorBin(
