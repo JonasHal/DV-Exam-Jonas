@@ -52,7 +52,7 @@ dc %<>%
   pivot_longer(cols = !date_sample, names_to = "kommune", values_to = "casesDiagnosed") %>%
   arrange(kommune, date_sample)
 
-dc$kommune <- str_replace(dc$kommune, "København", "Copenhagen")
+dc$kommune <- str_replace(dc$kommune, "Copenhagen", "København")
 
 # merge data together
   dc <- merge(dc, dsize)
@@ -68,11 +68,6 @@ dc$kommune <- str_replace(dc$kommune, "København", "Copenhagen")
   dc$casesDiagnosed <- as.integer(dc$casesDiagnosed)
   
   dk_data <- dc
-```
-
-```{r Cph-kbh-CleanUp, include=TRUE}
-# change the name to fit the same municipalitynames from leafletDK
-dsize$kommune <- str_replace(dsize$kommune, "Copenhagen", "København")
 ```
 
 ```{r dk_resampling, include=True}
@@ -121,7 +116,7 @@ df_dk_covid <- st_as_sf(df_dk_covid, sf_column_name = "geometry")
 
 ```{r Iteration, include=TRUE}
 start <- as.Date("2020-03-04")
-end   <- as.Date("2021-02-25")
+end   <- as.Date("2021-02-26")
 #Creates the coloring schema
 bins <- c(0,5,50,200,500,1000,2500)
 pal <- colorBin(
