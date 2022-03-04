@@ -21,6 +21,7 @@ library(dplyr)
 
 # Load Used Data
 dc <- read_delim(here("Data", "Municipality_cases_time_series.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
+dc$X100 <- NULL
 dsize <- read_delim(here("Data", "Municipality_test_pos.csv"), ";", escape_double = FALSE, trim_ws = TRUE)
 dk <- st_read(here("shapefiles/gadm36_DNK_2.shp"))
 ```
@@ -40,34 +41,36 @@ dsize <- dsize %>%
   rename("kID" = `Kommune_(id)`, "kommune" = `Kommune_(navn)`, population = Befolkningstal) %>%
   mutate(population = population * 1000) %>%
   select(-kID)
+head(dsize, 102)
 ```
 
 ```{r dc-diagnosedCases, include=TRUE}
 # make data tidy
 dc %<>%
-  # use pivot_longer to transpose all columns (apart from date_sample) to two columns ('kommune',
+  # use pivot_longer to transpose all columns (apart from date_sample) to two columns 'kommune',
   #  'testsConducted' 
-  #'casesDiagnosed') 
+  #'casesDiagnosed'
   #that hold the name of the kommune and the values of the number of diagnosed cases
-  pivot_longer(cols = !date_sample, names_to = "kommune", values_to = "casesDiagnosed") %>%
-  arrange(kommune, date_sample)
+  pivot_longer(cols = !SampleDate, names_to = "kommune", values_to = "casesDiagnosed") %>%
+  arrange(kommune, SampleDate)
 
 dc$kommune <- str_replace(dc$kommune, "Copenhagen", "København")
 
 # merge data together
-  dc <- merge(dc, dsize)
+dc <- merge(dc, dsize)
 
-  # create new variables
-  dc %<>%
-    group_by(kommune) %>%
-    mutate(
-      casesDPer100k = casesDiagnosed / (population / 100000),
-      casesWPer100k = roll_sum(casesDPer100k, width = 7, min_obs = 1)
-    )
+# create new variables
+dc %<>%
+  group_by(kommune) %>%
+  mutate(
+    casesDPer100k = casesDiagnosed / (population / 100000),
+    casesWPer100k = roll_sum(casesDPer100k, width = 7, min_obs = 1)
+  )
 
-  dc$casesDiagnosed <- as.integer(dc$casesDiagnosed)
-  
-  dk_data <- dc
+dc$casesDiagnosed <- as.integer(dc$casesDiagnosed)
+
+head(dc, 50)
+dk_data <- dc
 ```
 
 ```{r dk_resampling, include=True}
@@ -115,22 +118,22 @@ df_dk_covid <- st_as_sf(df_dk_covid, sf_column_name = "geometry")
 
 
 ```{r Iteration, include=TRUE}
-start <- as.Date("2020-03-04")
-end   <- as.Date("2021-02-26")
+start <- as.Date("2021-06-17")
+end   <- as.Date("2022-02-15")
 #Creates the coloring schema
-bins <- c(0,5,50,200,500,1000,2500)
+bins <- c(0,5,50,200,500,1000,2000,5000,10000,22000)
 pal <- colorBin(
-    palette = c("#ffe0c4", "#febe8d","#fea469", "#e16d3d", "#a3573a", "#8D2D2B"),
+    palette = c("#ffe0c4", "#febe8d","#fea469", "#e16d3d", "#a3573a", "#8D2D2B", "#691817", "#420908", "#040000"),
     bins = bins
 )
 
 while (start < end)
 { 
-  if (start == "2020-02-29") {
-    start <- start + 1  
-  }
-  else {
-    df <- df_dk_covid[df_dk_covid$date_sample == start, ]
+  #if (start == "2020-02-29") {
+  #  start <- start + 1  
+  #}
+  #else {
+    df <- df_dk_covid[df_dk_covid$SampleDate == start, ]
   
     frame <- leaflet(df, options = leafletOptions(zoomSnap = 0, zoomDelta=0)) %>%
             setView(lng = 10.801785, lat = 55.76392, zoom = 7) %>%
@@ -148,7 +151,7 @@ while (start < end)
             ) %>% 
             addLabelOnlyMarkers(lng = 13.632050, 
                         lat = 57.227758, 
-                        label = df$date_sample, 
+                        label = df$SampleDate, 
                         labelOptions = labelOptions(noHide = T, textOnly= T, textsize = "30px")
             ) %>% 
             addLabelOnlyMarkers(lng = 14.932050, 
@@ -167,6 +170,6 @@ while (start < end)
     mapshot(frame, file = paste0(getwd(), "/animation/", format(start), ".png"))
     
     start <- start + 1  
-  }
+  #}
 }
 ```
